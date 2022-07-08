@@ -1,12 +1,20 @@
 package Crawler
 
-import "github.com/tebeka/selenium"
+import (
+	"fmt"
+	"github.com/tebeka/selenium"
+)
 
-func LoadWebPage(driver selenium.WebDriver, Xpath string) {
+const ShowMore = "//*[@id=\"mais\"]/div/div/a/span/span[2]"
+
+func LoadWebPage(driver selenium.WebDriver) {
+	fmt.Println("Loading pages")
 	for {
-		elem, _ := driver.FindElements(selenium.ByXPATH, Xpath)
+		elem, _ := driver.FindElements(selenium.ByXPATH, ShowMore)
 		elem[0].Click()
-		if len(elem) == 0 {
+		text, _ := elem[0].Text()
+		if text != "MOSTRAR MAIS EMPRESAS" {
+			fmt.Println("All pages loaded")
 			break
 		}
 	}

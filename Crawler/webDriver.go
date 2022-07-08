@@ -13,7 +13,5 @@ func SeleniumWebDriver() (selenium.WebDriver, error) {
 		return nil, errors.New("could not create webdriver")
 	}
 
-	//driver.ResizeWindow("", 0, 0)
-
 	return driver, nil
 }

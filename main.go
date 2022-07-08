@@ -2,33 +2,35 @@ package main
 
 import (
 	"fmt"
+	"github.com/Darklabel91/AB2L_Crawler/CSV"
 	"github.com/Darklabel91/AB2L_Crawler/Crawler"
 )
 
-const (
-	AB2L     = "https://ab2l.org.br/radar-dinamico/"
-	ShowMore = "//*[@id=\"mais\"]/div/div/a/span/span[2]"
-	Company  = "//*[@id=\"listagem\"]/div/div/div/div"
-	InitLink = "//*[@id=\"listagem\"]/div/div/div/div["
-	EndLink  = "]/div/section/div[2]/div[2]/div/div[1]/div/div/div"
-	Resume   = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[1]/div/div[2]/div/div[1]/div/div/div/h2"
-)
+const AB2L = "https://ab2l.org.br/radar-dinamico/"
 
 func main() {
 	driver, err := Crawler.SeleniumWebDriver()
 	if err != nil {
-		fmt.Println("Web driver not created")
+		fmt.Println(err)
 	}
+
+	defer driver.Close()
 
 	err = driver.Get(AB2L)
 	if err != nil {
-		fmt.Println("ab2l web site offline")
+		fmt.Println(err)
 	}
 
-	Crawler.LoadWebPage(driver, ShowMore)
+	Crawler.LoadWebPage(driver)
 
-	err = Crawler.Craw(driver, Company, Resume, InitLink, EndLink)
+	legalTechs, err := Crawler.Craw(driver)
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	err = CSV.WriteCSV(legalTechs)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 }
