@@ -54,7 +54,10 @@ func generateHeaders() []string {
 		"Serviços",
 		"Fundadores",
 		"Informações Legais",
-		"Contato",
+		"Endereço",
+		"Site",
+		"Telefone",
+		"Email",
 	}
 }
 
@@ -66,6 +69,9 @@ func generateRow(legalTech Crawler.CompanyStruct) []string {
 		legalTech.Service,
 		legalTech.Founders,
 		legalTech.PersonalData,
-		legalTech.Contact,
+		legalTech.Address,
+		legalTech.Site,
+		legalTech.Phone,
+		legalTech.Mail,
 	}
 }

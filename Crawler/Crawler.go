@@ -10,16 +10,27 @@ import (
 )
 
 const (
-	Company           = "//*[@id=\"listagem\"]/div/div/div/div"
-	InitXpath         = "//*[@id=\"listagem\"]/div/div/div/div["
-	EndXpath          = "]/div/section/div[2]/div[2]/div/div[1]/div/div/div"
-	closeXpath        = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[2]/i"
-	nameXpath         = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[1]/div/div[2]/div/div[1]/div/div/div/h2"
-	generalXpath      = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[2]"
-	servicesXpath     = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[3]"
-	founderXpath      = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[4]"
-	personalDataXpath = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[5]"
-	contactXpath      = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[6]"
+	Wait                = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section"
+	Company             = "//*[@id=\"listagem\"]/div/div/div/div"
+	InitXpath           = "//*[@id=\"listagem\"]/div/div/div/div["
+	EndXpath            = "]/div/section/div[2]/div[2]/div/div[1]/div/div/div/div"
+	EndXpathData        = "]/div/section/div[2]/div[2]/div/div[2]/div/div/div"
+	closeXpath          = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[2]/i"
+	sectionXpath        = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section"
+	nameXpath           = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[1]/div/div[2]/div/div[1]/div/div/div/h2"
+	generaXpath         = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[2]/div/div/div/div[1]/div/div/div/div"
+	servicesXpath       = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[3]/div/div/div/div[3]/div/div/div/div"
+	servicesInitXpath   = "//*[@id=\"jet-toggle-control-260"
+	servicesEndXpath    = "\"]/div"
+	founderXpath        = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[4]"
+	founderInitXpath    = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[4]/div/div/div/div[3]/div/div/div/div["
+	founderEndXpath     = "]/div/section/div/div[2]/div/div[1]/div/div/div/div"
+	personalDataXpath   = "//*[@id=\"jet-toggle-content-2554\"]/div"
+	contactXpath        = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[6]"
+	contactXpathAddress = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[6]/div/div[1]/div/div[3]/div/div/div[2]/div/span"
+	contactXpathSite    = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[6]/div/div[1]/div/div[4]/div/div/div[2]/div/a"
+	contactXpathPhone   = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[6]/div/div[1]/div/div[5]/div/div/div[2]/div/span"
+	contactXpathMail    = "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[6]/div/div[1]/div/div[6]/div/div/div[2]/div/span"
 )
 
 type CompanyStruct struct {
@@ -28,7 +39,10 @@ type CompanyStruct struct {
 	Service      string
 	Founders     string
 	PersonalData string
-	Contact      string
+	Address      string
+	Site         string
+	Phone        string
+	Mail         string
 }
 
 func Craw(driver selenium.WebDriver) ([]CompanyStruct, error) {
@@ -38,34 +52,66 @@ func Craw(driver selenium.WebDriver) ([]CompanyStruct, error) {
 	}
 
 	var companys []CompanyStruct
-	for i := 1; i <= loop; i++ {
-		fmt.Println("Legal Tech: " + strconv.Itoa(i) + "/" + strconv.Itoa(loop))
-		openLink := InitXpath + strconv.Itoa(i) + EndXpath
+	for i := 0; i < loop; i++ {
+		fmt.Println("Legal Tech: " + strconv.Itoa(i+1) + "/" + strconv.Itoa(loop))
 
-		err = bttClick(driver, openLink)
+		forward, err := verifyData(driver, i)
 		if err != nil {
 			return nil, err
 		}
 
-		waitXpath(driver, nameXpath)
+		if forward {
+			openLink := InitXpath + strconv.Itoa(i+1) + EndXpath
 
-		document, err := getPageHtml(driver)
-		if err != nil {
-			return nil, err
+			open(driver, openLink)
+
+			continueTest, err := verifySection(driver)
+			if err != nil {
+				return nil, err
+			}
+
+			if continueTest {
+				document, err := getPageHtml(driver)
+				if err != nil {
+					return nil, err
+				}
+
+				company := getData(document)
+				companys = append(companys, company)
+			}
+
+			close(driver)
 		}
 
-		company := getData(document)
-		companys = append(companys, company)
-
-		err = bttClick(driver, closeXpath)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return companys, nil
 }
 
+//Interact with link to open and close
+func bttClick(driver selenium.WebDriver, XpathLink string) error {
+	btt, err := driver.FindElement(selenium.ByXPATH, XpathLink)
+	if err != nil {
+		return err
+	}
+	btt.Click()
+	return nil
+}
+
+func open(driver selenium.WebDriver, openLink string) {
+	bttClick(driver, openLink)
+	bttClick(driver, openLink)
+	bttClick(driver, openLink)
+	waitXpath(driver, Wait)
+}
+
+func close(driver selenium.WebDriver) {
+	bttClick(driver, closeXpath)
+	bttClick(driver, closeXpath)
+	bttClick(driver, closeXpath)
+}
+
+//Calculates loop
 func totalLoop(driver selenium.WebDriver, XpathCompany string) (int, error) {
 	totalLinks, err := driver.FindElements(selenium.ByXPATH, XpathCompany)
 	if err != nil {
@@ -75,17 +121,38 @@ func totalLoop(driver selenium.WebDriver, XpathCompany string) (int, error) {
 	return len(totalLinks), nil
 }
 
-func bttClick(driver selenium.WebDriver, Xpathlink string) error {
-	btt, err := driver.FindElement(selenium.ByXPATH, Xpathlink)
+//makes verification to avoid error in execution
+func verifyData(driver selenium.WebDriver, i int) (bool, error) {
+	titleXpath := InitXpath + strconv.Itoa(i+1) + EndXpathData
+
+	elemTitle, err := driver.FindElement(selenium.ByXPATH, titleXpath)
 	if err != nil {
-		return err
+		return false, err
 	}
+	title, err := elemTitle.Text()
 
-	btt.Click()
-
-	return nil
+	if title != "No data was found" {
+		return true, nil
+	} else {
+		return false, nil
+	}
 }
 
+func verifySection(driver selenium.WebDriver) (bool, error) {
+	elemSection, err := driver.FindElements(selenium.ByXPATH, sectionXpath)
+	if err != nil {
+		return false, err
+	}
+
+	if len(elemSection) >= 6 {
+		return true, nil
+	} else {
+		return false, nil
+	}
+
+}
+
+//get the page source
 func getPageHtml(driver selenium.WebDriver) (*html.Node, error) {
 	pageSourceCode, err := driver.PageSource()
 	if err != nil {
@@ -100,6 +167,7 @@ func getPageHtml(driver selenium.WebDriver) (*html.Node, error) {
 	return document, nil
 }
 
+//get the needed data
 func getData(document *html.Node) CompanyStruct {
 	var name string
 	names := htmlquery.Find(document, nameXpath)
@@ -108,33 +176,45 @@ func getData(document *html.Node) CompanyStruct {
 	}
 
 	var general string
-	generals := htmlquery.Find(document, generalXpath)
+	generals := htmlquery.Find(document, generaXpath)
 	if len(generals) > 0 {
-		general = htmlquery.InnerText(htmlquery.FindOne(document, generalXpath))
+		for i := 0; i < 4; i++ {
+			general = htmlquery.InnerText(htmlquery.FindOne(document, generaXpath))
+		}
 	}
 
 	var service string
 	services := htmlquery.Find(document, servicesXpath)
 	if len(services) > 0 {
-		service = htmlquery.InnerText(htmlquery.FindOne(document, servicesXpath))
+		for i := 0; i < len(services); i++ {
+			service += htmlquery.InnerText(htmlquery.FindOne(document, servicesInitXpath+strconv.Itoa(i+1)+servicesEndXpath)) + " | "
+		}
 	}
 
 	var founder string
 	founders := htmlquery.Find(document, founderXpath)
 	if len(founders) > 0 {
-		founder = htmlquery.InnerText(htmlquery.FindOne(document, founderXpath))
+		for i := 0; i < len(founders); i++ {
+			founder += htmlquery.InnerText(htmlquery.FindOne(document, founderInitXpath+strconv.Itoa(i+1)+founderEndXpath)) + " | "
+		}
 	}
 
 	var personalData string
-	personaldatas := htmlquery.Find(document, personalDataXpath)
-	if len(personaldatas) > 0 {
+	personalDatas := htmlquery.Find(document, personalDataXpath)
+	if len(personalDatas) > 0 {
 		personalData = htmlquery.InnerText(htmlquery.FindOne(document, personalDataXpath))
 	}
 
-	var contact string
+	var address string
+	var site string
+	var phone string
+	var mail string
 	contacts := htmlquery.Find(document, contactXpath)
 	if len(contacts) > 0 {
-		contact = htmlquery.InnerText(htmlquery.FindOne(document, contactXpath))
+		address = htmlquery.InnerText(htmlquery.FindOne(document, contactXpathAddress))
+		site = htmlquery.InnerText(htmlquery.FindOne(document, contactXpathSite))
+		phone = htmlquery.InnerText(htmlquery.FindOne(document, contactXpathPhone))
+		mail = htmlquery.InnerText(htmlquery.FindOne(document, contactXpathMail))
 	}
 
 	return CompanyStruct{
@@ -143,7 +223,10 @@ func getData(document *html.Node) CompanyStruct {
 		Service:      service,
 		Founders:     founder,
 		PersonalData: personalData,
-		Contact:      contact,
+		Address:      strings.TrimSpace(address),
+		Site:         strings.TrimSpace(site),
+		Phone:        strings.TrimSpace(phone),
+		Mail:         strings.TrimSpace(mail),
 	}
 
 }
