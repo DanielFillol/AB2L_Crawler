@@ -108,7 +108,6 @@ func getData(driver selenium.WebDriver, document *html.Node) (CompanyStruct, err
 		if err != nil {
 			return CompanyStruct{}, err
 		}
-
 		if title == "Endereço e Contato" {
 			address, site, phone, mail = getAddress(document)
 		}
@@ -120,9 +119,8 @@ func getData(driver selenium.WebDriver, document *html.Node) (CompanyStruct, err
 			if err != nil {
 				return CompanyStruct{}, err
 			}
-
 			if title == "Endereço e Contato" {
-				address, site, phone, mail = getAddress2(document)
+				address, site, phone, mail = getAddress2(driver, document)
 			}
 
 		}
@@ -189,7 +187,7 @@ func getAddress(document *html.Node) (string, string, string, string) {
 	return address, site, phone, mail
 }
 
-func getAddress2(document *html.Node) (string, string, string, string) {
+func getAddress2(driver selenium.WebDriver, document *html.Node) (string, string, string, string) {
 	var address string
 	var site string
 	var phone string
@@ -197,7 +195,10 @@ func getAddress2(document *html.Node) (string, string, string, string) {
 	contacts := htmlquery.Find(document, "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[3]/div")
 	if len(contacts) > 0 {
 		address = htmlquery.InnerText(htmlquery.FindOne(document, "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[3]/div/div[1]/div/div[3]/div/div/div[2]/div/span"))
-		site = htmlquery.InnerText(htmlquery.FindOne(document, "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[3]/div/div[1]/div/div[4]/div/div/div[2]/div/a"))
+		ww, _ := driver.FindElements(selenium.ByXPATH, "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[3]/div/div[1]/div/div[4]/div/div/div[2]/div/a")
+		if len(ww) != 0 {
+			site = htmlquery.InnerText(htmlquery.FindOne(document, "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[3]/div/div[1]/div/div[4]/div/div/div[2]/div/a"))
+		}
 		phone = htmlquery.InnerText(htmlquery.FindOne(document, "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[3]/div/div[1]/div/div[5]/div/div/div[2]/div/span"))
 		mail = htmlquery.InnerText(htmlquery.FindOne(document, "//*[@id=\"jet-popup-5641\"]/div/div[2]/div[1]/div[2]/div/section[3]/div/div[1]/div/div[6]/div/div/div[2]/div/span"))
 	}
