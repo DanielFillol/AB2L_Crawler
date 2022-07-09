@@ -1,5 +1,6 @@
 # AB2L_Crawler
 Project for crawlling data of all company's in AB2L radar.
+You can find the last crawled data [here](https://github.com/Darklabel91/AB2L_Crawler/blob/main/Result/legalTechs.csv)
 
 ## Dependencies
 - [Selenium](https://github.com/tebeka/selenium#readme)
